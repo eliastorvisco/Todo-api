@@ -18,7 +18,7 @@ app.get('/', function (request, response) {
 //GET /todos
 app.get('/todos', function (request, response) {
     //It should be converted to json. There is a better way than JSON.stringify.
-    response.json(todos);
+    response.json(_.map(todos, function(todo) { return _.omit(todo, 'id'); }));
 });
 
 //GET /todos/:id

@@ -1,5 +1,6 @@
 var express = require('express'); //Allows us do GETs and POSTs
 var bodyParser = require('body-parser'); //To send data with POSTs
+var _ = require('underscore');
 
 var app = express(); //Used to do GETs and POSTs
 var PORT = process.env.PORT || 3000; //So if it is running in Heroku it works!
@@ -23,14 +24,8 @@ app.get('/todos', function (request, response) {
 //GET /todos/:id
 app.get('/todos/:id', function (request, response) {
     var todoId = parseInt(request.params.id, 10); //To decimal int
-    var matchedTodo;
-    for (var i = 0; i < todos.length; i++) {
-        if (todos[i].id === todoId) {
-            matchedTodo = todos[i];
-            break;
-        }
-    }
-    //response.send('Asking for todo with id of ' + request.params.id);
+    var matchedTodo = _.omit(_.findWhere(todos, {id: todoId}), 'id');
+
     if (matchedTodo) response.json(matchedTodo);
     else response.status(404).send();
 });
@@ -38,7 +33,13 @@ app.get('/todos/:id', function (request, response) {
 //POST  /todos
 //npm install body-parser@1.13.3 --save
 app.post('/todos', function (request, response) {
-    var body = request.body;
+    //var body = request.body;
+    var body = _.pick(request.body, 'description', 'completed'); //ignore all extra data
+
+    if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+        return response.status(400).send();
+    }
+
     body.id = todoNextId++;
     todos.push(body);
     response.json(body);

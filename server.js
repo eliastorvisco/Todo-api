@@ -39,7 +39,7 @@ app.post('/todos', function (request, response) {
     if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
         return response.status(400).send();
     }
-
+    body.description = body.description.trim(); //Delete spaces at beggining and end
     body.id = todoNextId++;
     todos.push(body);
     response.json(body);

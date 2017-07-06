@@ -15,16 +15,23 @@ app.get('/', function (request, response) {
     response.send('Todo API Root');
 });
 
-//GET /todos
+//GET /todos?completed=true
 app.get('/todos', function (request, response) {
-    //It should be converted to json. There is a better way than JSON.stringify.
-    response.json(_.map(todos, function(todo) { return _.omit(todo, 'id'); }));
+    var queryParams = request.query;
+    var filteredTodos = todos;
+
+    if(queryParams.hasOwnProperty('completed') && queryParams.completed === 'true') {
+        filteredTodos = _.where(filteredTodos, {completed: true});
+    } else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
+        filteredTodos = _.where(filteredTodos, {completed: false});
+    }
+    response.json(filteredTodos);
 });
 
 //GET /todos/:id
 app.get('/todos/:id', function (request, response) {
     var todoId = parseInt(request.params.id, 10); //To decimal int
-    var matchedTodo = _.omit(_.findWhere(todos, {id: todoId}), 'id');
+    var matchedTodo = _.findWhere(todos, {id: todoId});
 
     if (matchedTodo) response.json(matchedTodo);
     else response.status(404).send();
@@ -58,7 +65,7 @@ app.delete('/todos/:id', function (request, response) {
     }
 });
 
-//PUT /todos/:id
+//PUT /todos/:id  - (Updates)
 app.put('/todos/:id', function (request, response) {
     var todoId = parseInt(request.params.id, 10);
     var matchedTodo = _.findWhere(todos, {id: todoId});

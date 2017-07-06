@@ -5,7 +5,11 @@ var _ = require('underscore');
 var app = express(); //Used to do GETs and POSTs
 var PORT = process.env.PORT || 3000; //So if it is running in Heroku it works!
 var todos = [];
-var todoNextId = 1;
+//Example of initialized array
+todos = [{description: 'Workout!', completed: true, id: 1},
+         {description: 'Have a shower', completed: true, id: 2},
+         {description: 'Welcome Dad', completed: false, id: 3}];
+var todoNextId = 4;
 
 app.use(bodyParser.json()); //middleware for everytime json request comes in
                             //express is gonna parse it and we can access it
@@ -15,7 +19,7 @@ app.get('/', function (request, response) {
     response.send('Todo API Root');
 });
 
-//GET /todos?completed=true
+//GET /todos?completed=true&q=<word in the description>
 app.get('/todos', function (request, response) {
     var queryParams = request.query;
     var filteredTodos = todos;
@@ -24,6 +28,11 @@ app.get('/todos', function (request, response) {
         filteredTodos = _.where(filteredTodos, {completed: true});
     } else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
         filteredTodos = _.where(filteredTodos, {completed: false});
+    }
+    if(queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
+        filteredTodos = _.filter(filteredTodos, function (todo){
+            return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+        });
     }
     response.json(filteredTodos);
 });

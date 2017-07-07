@@ -1,14 +1,11 @@
 var express = require('express'); //Allows us do GETs and POSTs
 var bodyParser = require('body-parser'); //To send data with POSTs
 var _ = require('underscore');
+var db = require('./db.js');
 
 var app = express(); //Used to do GETs and POSTs
 var PORT = process.env.PORT || 3000; //So if it is running in Heroku it works!
 var todos = [];
-//Example of initialized array
-todos = [{description: 'Workout!', completed: true, id: 1},
-         {description: 'Have a shower', completed: true, id: 2},
-         {description: 'Welcome Dad', completed: false, id: 3}];
 var todoNextId = 4;
 
 app.use(bodyParser.json()); //middleware for everytime json request comes in
@@ -49,16 +46,21 @@ app.get('/todos/:id', function (request, response) {
 //POST  /todos
 //npm install body-parser@1.13.3 --save
 app.post('/todos', function (request, response) {
-    //var body = request.body;
+    // //var body = request.body;
     var body = _.pick(request.body, 'description', 'completed'); //ignore all extra data
-
-    if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
-        return response.status(400).send();
-    }
-    body.description = body.description.trim(); //Delete spaces at beggining and end
-    body.id = todoNextId++;
-    todos.push(body);
-    response.json(body);
+    db.todo.create(body).then(function (todo) {
+        response.json(todo.toJSON());
+    }, function (error) {
+        response.status(400).json(error);
+    });
+    //
+    // if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+    //     return response.status(400).send();
+    // }
+    // body.description = body.description.trim(); //Delete spaces at beggining and end
+    // body.id = todoNextId++;
+    // todos.push(body);
+    // response.json(body);
 });
 
 //DELETE /todos/:id
@@ -101,6 +103,8 @@ app.put('/todos/:id', function (request, response) {
     response.json(matchedTodo);
 });
 
-app.listen(PORT, function () {
-    console.log('Express listening on port ' + PORT + '!');
+db.sequelize.sync().then(function () {
+    app.listen(PORT, function () {
+        console.log('Express listening on port ' + PORT + '!');
+    });
 });

@@ -37,10 +37,15 @@ app.get('/todos', function (request, response) {
 //GET /todos/:id
 app.get('/todos/:id', function (request, response) {
     var todoId = parseInt(request.params.id, 10); //To decimal int
-    var matchedTodo = _.findWhere(todos, {id: todoId});
-
-    if (matchedTodo) response.json(matchedTodo);
-    else response.status(404).send();
+    db.todo.findById(todoId).then(function (todo) {
+        if(!!todo) {
+            response.json(todo.toJSON());
+        } else {
+            response.status(404).send('Todo not found.');
+        }
+    }).catch( function (error) {
+        response.status(500).send(); //something went wrong in the servers
+    });
 });
 
 //POST  /todos
@@ -53,14 +58,6 @@ app.post('/todos', function (request, response) {
     }, function (error) {
         response.status(400).json(error);
     });
-    //
-    // if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
-    //     return response.status(400).send();
-    // }
-    // body.description = body.description.trim(); //Delete spaces at beggining and end
-    // body.id = todoNextId++;
-    // todos.push(body);
-    // response.json(body);
 });
 
 //DELETE /todos/:id

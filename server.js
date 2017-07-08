@@ -114,6 +114,17 @@ app.put('/todos/:id', function (request, response) {
         response.status(500).send();
     });
 });
+//////////Users
+app.post('/users', function(request, response) {
+    var body = _.pick(request.body, 'email', 'password'); //ignore all extra data
+    db.user.create(body).then(function (user) {
+        response.json(user.toJSON());
+    }, function (error) {
+        response.status(400).json(error);
+    });
+});
+
+
 
 db.sequelize.sync().then(function () {
     app.listen(PORT, function () {

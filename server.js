@@ -2,6 +2,7 @@ var express = require('express'); //Allows us do GETs and POSTs
 var bodyParser = require('body-parser'); //To send data with POSTs
 var _ = require('underscore');
 var db = require('./db.js');
+var bcrypt = require('bcrypt');
 
 var app = express(); //Used to do GETs and POSTs
 var PORT = process.env.PORT || 3000; //So if it is running in Heroku it works!
@@ -124,7 +125,16 @@ app.post('/users', function(request, response) {
     });
 });
 
+//POST /users/login
+app.post('/users/login', function (request, response) {
+    var body = _.pick(request.body, 'email', 'password');
+    db.user.authenticate(body).then(function (user) {
+        response.json(user.toPublicJSON());
+    }, function () {
+        response.status(401).send();
+    });
 
+});
 
 db.sequelize.sync({force: true}).then(function () {
     app.listen(PORT, function () {

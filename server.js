@@ -3,6 +3,7 @@ var bodyParser = require('body-parser'); //To send data with POSTs
 var _ = require('underscore');
 var db = require('./db.js');
 var bcrypt = require('bcrypt');
+var middleware = require('./middleware.js')(db);
 
 var app = express(); //Used to do GETs and POSTs
 var PORT = process.env.PORT || 3000; //So if it is running in Heroku it works!
@@ -18,7 +19,7 @@ app.get('/', function (request, response) {
 });
 
 //GET /todos?completed=true&q=<word in the description>
-app.get('/todos', function (request, response) {
+app.get('/todos', middleware.requireAuthentication, function (request, response) {
     var query = request.query;
     var where = {};
 
@@ -42,7 +43,7 @@ app.get('/todos', function (request, response) {
 });
 
 //GET /todos/:id
-app.get('/todos/:id', function (request, response) {
+app.get('/todos/:id', middleware.requireAuthentication, function (request, response) {
     var todoId = parseInt(request.params.id, 10); //To decimal int
     db.todo.findById(todoId).then(function (todo) {
         if(!!todo) {
@@ -57,7 +58,7 @@ app.get('/todos/:id', function (request, response) {
 
 //POST  /todos
 //npm install body-parser@1.13.3 --save
-app.post('/todos', function (request, response) {
+app.post('/todos', middleware.requireAuthentication, function (request, response) {
     // //var body = request.body;
     var body = _.pick(request.body, 'description', 'completed'); //ignore all extra data
     db.todo.create(body).then(function (todo) {
@@ -68,7 +69,7 @@ app.post('/todos', function (request, response) {
 });
 
 //DELETE /todos/:id
-app.delete('/todos/:id', function (request, response) {
+app.delete('/todos/:id', middleware.requireAuthentication, function (request, response) {
     var todoId = parseInt(request.params.id, 10);
     db.todo.destroy({
         where: {
@@ -88,7 +89,7 @@ app.delete('/todos/:id', function (request, response) {
 });
 
 //PUT /todos/:id  - (Updates)
-app.put('/todos/:id', function (request, response) {
+app.put('/todos/:id', middleware.requireAuthentication, function (request, response) {
     var todoId = parseInt(request.params.id, 10);
     var body = _.pick(request.body, 'description', 'completed');
     var attributes = {};
